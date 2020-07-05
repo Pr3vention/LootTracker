@@ -1,0 +1,11 @@
+###############################################################################
+# Set default behavior to automatically normalize line endings.
+###############################################################################
+* text=auto
+
+###############################################################################
+# used to remove files from deployment using `git archive`
+###############################################################################
+.editorconfig export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore
