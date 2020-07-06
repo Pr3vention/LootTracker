@@ -1,10 +1,25 @@
 local name, addonTable = ...
 LootTracker = addonTable
 
-local data = {
-	
+local creatures = {}
+-- datatype definition
+local baseCreature = {
+   __index = function(t, key)
+      if key == "reportString" then
+         return t.name .. ' (' .. t.id .. ') has been killed ' .. t.total .. ' time(s), of which ' .. t.lootable .. ' had loot.'
+      else
+         return table[key]
+      end
+   end
 }
 
+-- general functions
+local saveCreatureData = function(creatureID, name, hasLoot)
+   local creature = rawget(creatures, creatureID) or setmetatable({id=creatureID,name=name}, baseCreature)
+   creature.total = (creature.total or 0) + 1
+   creature.lootable = (creature.lootable or 0) + (hasLoot and 1 or 0)
+   rawset(creatures, creatureID, creature)
+end
 local getCreatureIDForGUID = function(unitGUID)
 	local tbl = { strsplit("-",unitGUID) }
 	if tbl[1] == "Creature" then
@@ -16,6 +31,7 @@ local captureLootInfo = function(unitGUID, name, flags)
 	if creatureID then
 		local hasLoot, inRange = CanLootUnit(unitGUID)
 		print(name .. ' (' .. creatureID .. ') lootable: ' .. tostring(hasLoot))
+		saveCreatureData(creatureID, name, hasLoot)
 	end
 end
 --------------------
