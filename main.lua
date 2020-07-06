@@ -34,6 +34,16 @@ local captureLootInfo = function(unitGUID, name, flags)
 		saveCreatureData(creatureID, name, hasLoot)
 	end
 end
+
+----------------
+-- Public API --
+----------------
+LootTracker.Print = function()
+	for k,v in pairs(creatures) do
+		print(v.reportString)
+	end
+end
+
 --------------------
 -- Event Handling --
 --------------------
