@@ -3,7 +3,7 @@
 ## Title: LootTracker
 ## Notes: Tracks mob kill quantity and relative item drop rate
 ## Version: 0.0.1
-## SavedVariables: LootTrackerData
+## SavedVariables: LootTrackerDB
 
 settings.lua
 main.lua

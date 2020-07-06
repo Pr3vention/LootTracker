@@ -1,24 +1,13 @@
 local name, addonTable = ...
 LootTracker = addonTable
-
-local creatures = {}
--- datatype definition
-local baseCreature = {
-   __index = function(t, key)
-      if key == "reportString" then
-         return t.name .. ' (' .. t.id .. ') has been killed ' .. t.total .. ' time(s), of which ' .. t.lootable .. ' had loot.'
-      else
-         return table[key]
-      end
-   end
-}
+local LootTrackerDB = { }
 
 -- general functions
 local saveCreatureData = function(creatureID, name, hasLoot)
-   local creature = rawget(creatures, creatureID) or setmetatable({id=creatureID,name=name}, baseCreature)
+   local creature = rawget(LootTrackerDB.Data, creatureID) or {name=name}
    creature.total = (creature.total or 0) + 1
    creature.lootable = (creature.lootable or 0) + (hasLoot and 1 or 0)
-   rawset(creatures, creatureID, creature)
+   rawset(LootTrackerDB.Data, creatureID, creature)
 end
 local getCreatureIDForGUID = function(unitGUID)
 	local tbl = { strsplit("-",unitGUID) }
@@ -39,8 +28,8 @@ end
 -- Public API --
 ----------------
 LootTracker.Print = function()
-	for k,v in pairs(creatures) do
-		print(v.reportString)
+	for k,v in pairs(LootTrackerDB.Data) do
+		print(v.name .. ' (' .. k .. ') has been killed ' .. v.total .. ' time(s), of which ' .. v.lootable .. ' had loot.')
 	end
 end
 
@@ -64,4 +53,7 @@ end
 eventFrame:RegisterEvent("VARIABLES_LOADED")
 eventFrame.events.VARIABLES_LOADED = function()
 	-- TODO: cache some info here like character GUID, capture sessions, etc
+	LootTrackerDB = _G["LootTrackerDB"] or {}
+	if not _G["LootTrackerDB"] then _G["LootTrackerDB"] = LootTrackerDB end
+	if not LootTrackerDB.Data then LootTrackerDB.Data = { } end
 end
