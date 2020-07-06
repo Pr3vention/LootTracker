@@ -13,15 +13,10 @@ local data = {
 local eventFrame = CreateFrame("FRAME", nil, UIParent)
 eventFrame.events = {}
 eventFrame:SetScript("OnEvent", function(self, event, ...) (eventFrame.events[event] or print)(...) end)
-eventFrame:RegisterEvent("VARIABLES_LOADED")
 LootTracker.testframe = eventFrame
 
-eventFrame.events.TRANSMOG_COLLECTION_UPDATED = function(collectionIndex, modID, itemAppearanceID, reason)
-	print('TRANSMOG_COLLECTION_UPDATED: ', collectionIndex, modID, itemAppearanceID, reason)
 end
-eventFrame.events.TRANSMOG_COLLECTION_SOURCE_ADDED = function(sourceID)
-	print('TRANSMOG_COLLECTION_SOURCE_ADDED: ', sourceID)
-end
+eventFrame:RegisterEvent("VARIABLES_LOADED")
 eventFrame.events.VARIABLES_LOADED = function()
-	print('if you see this message, the event was correctly registered!')
+	-- TODO: cache some info here like character GUID, capture sessions, etc
 end
