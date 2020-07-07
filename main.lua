@@ -182,6 +182,7 @@ local CreateWindow = function()
 			window.rows[creatureID].name:SetText(creatureData.name .. ' (' .. creatureID .. ')')
 			window.rows[creatureID].totalKill:SetText(creatureData.total)
 			window.rows[creatureID].numberLootable:SetText(creatureData.lootable)
+			lastKnownRow = window.rows[creatureID]
 		end
 	end
 	window.updateWindowData = function(creatureID)
