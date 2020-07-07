@@ -146,13 +146,13 @@ local CreateWindow = function()
 	window.rows:SetPoint("BOTTOM", window, "BOTTOM", 0, 0)
 	window.rows:SetPoint("TOPLEFT", window.nameHeader, "BOTTOMLEFT", 0, 30)
 
-	local previous = window.nameHeader
+	local lastKnownRow = window.nameHeader
 	for k,v in pairs(LootTrackerDB.Data) do
-		window.rows[k] = CreateRow(window.rows, previous)
+		window.rows[k] = CreateRow(window.rows, lastKnownRow)
 		window.rows[k].name:SetText(v.name .. ' (' .. k .. ')')
 		window.rows[k].totalKill:SetText(v.total)
 		window.rows[k].numberLootable:SetText(v.lootable)
-		previous = window.rows[k]
+		lastKnownRow = window.rows[k]
 	end
 	
 	window.rows.scroller = CreateFrame("ScrollFrame", "LootTrackerScrollFrame", window.rows, "FauxScrollFrameTemplateLight")
@@ -175,26 +175,24 @@ local CreateWindow = function()
 	window.statusLabel:SetHeight(16)
 	window.statusLabel:SetPoint("BOTTOM", window, "BOTTOM", 0, 8)
 	window.statusLabel:SetText(STATUS_TEXT:format(ROW_COUNT))
-end
-
-local insertNewCreatureData = function(creatureID, creatureData)
-	print(creatureID, creatureData)
-	if creatureID and creatureData then
-		window.rows[creatureID] = CreateRow(window.rows, window.rows[-1])
-		window.rows[creatureID].name:SetText(creatureData.name .. ' (' .. creatureID .. ')')
-		window.rows[creatureID].totalKill:SetText(creatureData.total)
-		window.rows[creatureID].numberLootable:SetText(creatureData.lootable)
-	end
-end
-
-local updateWindowData = function(creatureID)
-	local creatureData = LootTrackerDB.Data[creatureID]
-	if creatureData then
-		if window.rows[creatureID] then
+	
+	window.insertNewCreatureData = function(creatureID, creatureData)
+		if creatureID and creatureData then
+			window.rows[creatureID] = CreateRow(window.rows, lastKnownRow)
+			window.rows[creatureID].name:SetText(creatureData.name .. ' (' .. creatureID .. ')')
 			window.rows[creatureID].totalKill:SetText(creatureData.total)
 			window.rows[creatureID].numberLootable:SetText(creatureData.lootable)
-		else
-			insertNewCreatureData(creatureID, creatureData)
+		end
+	end
+	window.updateWindowData = function(creatureID)
+		local creatureData = LootTrackerDB.Data[creatureID]
+		if creatureData then
+			if window.rows[creatureID] then
+				window.rows[creatureID].totalKill:SetText(creatureData.total)
+				window.rows[creatureID].numberLootable:SetText(creatureData.lootable)
+			else
+				window.insertNewCreatureData(creatureID, creatureData)
+			end
 		end
 	end
 end
@@ -206,7 +204,7 @@ local saveCreatureData = function(creatureID, name, hasLoot)
 	creature.lootable = (creature.lootable or 0) + (hasLoot and 1 or 0)
 	rawset(LootTrackerDB.Data, creatureID, creature)
 	 -- TODO:: this is almost certainly a major performance hit. Maybe better to only update window when combat ends?
-	updateWindowData(creatureID)
+	window.updateWindowData(creatureID)
 end
 local getCreatureIDForGUID = function(unitGUID)
 	local tbl = { strsplit("-",unitGUID) }
