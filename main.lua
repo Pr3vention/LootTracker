@@ -146,13 +146,14 @@ local CreateWindow = function()
 	window.rows:SetPoint("BOTTOM", window, "BOTTOM", 0, 0)
 	window.rows:SetPoint("TOPLEFT", window.nameHeader, "BOTTOMLEFT", 0, 30)
 
-	local lastKnownRow = window.nameHeader
+	local lastKnownRow, rowCount = window.nameHeader, 0
 	for k,v in pairs(LootTrackerDB.Data) do
 		window.rows[k] = CreateRow(window.rows, lastKnownRow)
 		window.rows[k].name:SetText(v.name .. ' (' .. k .. ')')
 		window.rows[k].totalKill:SetText(v.total)
 		window.rows[k].numberLootable:SetText(v.lootable)
 		lastKnownRow = window.rows[k]
+		rowCount = rowCount + 1
 	end
 	
 	window.rows.scroller = CreateFrame("ScrollFrame", "LootTrackerScrollFrame", window.rows, "FauxScrollFrameTemplateLight")
@@ -174,7 +175,7 @@ local CreateWindow = function()
 	window.statusLabel:SetWidth(420)
 	window.statusLabel:SetHeight(16)
 	window.statusLabel:SetPoint("BOTTOM", window, "BOTTOM", 0, 8)
-	window.statusLabel:SetText(STATUS_TEXT:format(ROW_COUNT))
+	window.statusLabel:SetText(STATUS_TEXT:format(rowCount))
 	
 	window.insertNewCreatureData = function(creatureID, creatureData)
 		if creatureID and creatureData then
@@ -183,6 +184,9 @@ local CreateWindow = function()
 			window.rows[creatureID].totalKill:SetText(creatureData.total)
 			window.rows[creatureID].numberLootable:SetText(creatureData.lootable)
 			lastKnownRow = window.rows[creatureID]
+			
+			rowCount = rowCount + 1
+			window.statusLabel:SetText(STATUS_TEXT:format(rowCount))
 		end
 	end
 	window.updateWindowData = function(creatureID)
