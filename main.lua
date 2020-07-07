@@ -191,8 +191,8 @@ local updateWindowData = function(creatureID)
 	local creatureData = LootTrackerDB.Data[creatureID]
 	if creatureData then
 		if window.rows[creatureID] then
-			window.rows[creatureID].totalKill = creatureData.total
-			window.rows[creatureID].numberLootable = creatureData.lootable
+			window.rows[creatureID].totalKill:SetText(creatureData.total)
+			window.rows[creatureID].numberLootable:SetText(creatureData.lootable)
 		else
 			insertNewCreatureData(creatureID, creatureData)
 		end
