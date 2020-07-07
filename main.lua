@@ -249,7 +249,7 @@ eventFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
 eventFrame.events.COMBAT_LOG_EVENT_UNFILTERED = function()
 	local _, event, _, sourceGUID, sourceName, _, _, destGUID, destName, destFlags = CombatLogGetCurrentEventInfo();
 	if event == "PARTY_KILL" then
-		C_Timer.After(0.25, function() captureLootInfo(destGUID, destName, destFlags) end)
+		C_Timer.After(1, function() captureLootInfo(destGUID, destName, destFlags) end)
 	end
 end
 eventFrame:RegisterEvent("VARIABLES_LOADED")
