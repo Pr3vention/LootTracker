@@ -216,7 +216,6 @@ local captureLootInfo = function(unitGUID, name, flags)
 	local creatureID = getCreatureIDForGUID(unitGUID)
 	if creatureID then
 		local hasLoot, inRange = CanLootUnit(unitGUID)
-		print(name .. ' (' .. creatureID .. ') lootable: ' .. tostring(hasLoot))
 		saveCreatureData(creatureID, name, hasLoot)
 	end
 end
