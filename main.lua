@@ -213,6 +213,7 @@ local saveCreatureData = function(creatureID, name, hasLoot)
 end
 local getCreatureIDForGUID = function(unitGUID)
 	local tbl = { strsplit("-",unitGUID) }
+	-- TODO: how to handle Vignette mobs (always 0 ID)? C_VignetteInfo exists, but it doesn't seem to expose anything useful
 	if tbl[1] == "Creature" then
 		return tbl[6]
 	end
