@@ -139,7 +139,7 @@ local CreateWindow = function()
 	window.numberLootableHeader:SetText("# Lootable")
 
 	local maxRows = 0
-	local function updateScrollFrame()
+	local function updateScrollFrame(clearAll)
 		local data = LootTrackerDB.Data or {}
 		local rowCount = 0
 		for k,v in pairs(data) do rowCount = rowCount + 1 end
@@ -147,6 +147,14 @@ local CreateWindow = function()
 		local offset = FauxScrollFrame_GetOffset(LootTrackerScrollFrame) or 0
 		-- since we're using a non-sequential table index, we need separate counters to track the offset manually
 		-- rowCounter tracks the row being updated in the frame, while mobIndex tracks the creature entry in LootTrackerDB.Data
+		if clearAll then
+			for i=1, maxRows do
+				window.scrollFrame.rows[i].name:SetText("")
+				window.scrollFrame.rows[i].totalKill:SetText("")
+				window.scrollFrame.rows[i].numberLootable:SetText("")
+				window.scrollFrame.rows[i]:Disable()
+			end
+		end
 		local rowCounter, mobIndex = 1, 1
 		for k,v in pairs(data) do
 			-- if the current mob we're looking at sits at an index above the scrollFrame offset, we want to render it
@@ -175,6 +183,16 @@ local CreateWindow = function()
 			LootTrackerScrollFrameScrollBarScrollDownButton:Enable()
 		end
 	end
+	
+	window.purgeButton = CreateFrame("Button", nil, window, "UIPanelButtonTemplate")
+	window.purgeButton:SetHeight(24)
+	window.purgeButton:SetWidth(150)
+	window.purgeButton:SetPoint("TOPLEFT", window, "TOPLEFT", 10, -5)
+	window.purgeButton:SetText("Purge data (temp)")
+	window.purgeButton:SetScript("OnClick", function()
+		table.wipe(LootTrackerDB.Data)
+		updateScrollFrame(true)
+	end)
 	
 	window.scrollFrame = CreateFrame("ScrollFrame", "LootTrackerScrollFrame", window, "FauxScrollFrameTemplateLight")
 	window.scrollFrame:SetWidth(window:GetWidth())
@@ -249,6 +267,7 @@ eventFrame.events = {}
 eventFrame:SetScript("OnEvent", function(self, event, ...) (eventFrame.events[event] or print)(...) end)
 LootTracker.testframe = eventFrame
 
+-- TODO: hook into the BOSS_KILL(ID,name) event since some bosses don't trigger PARTY_KILL. How to detect PARTY_KILL if BOSS_KILL has already triggered for the encounter?
 eventFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
 eventFrame.events.COMBAT_LOG_EVENT_UNFILTERED = function()
 	local _, event, _, sourceGUID, sourceName, _, _, destGUID, destName, destFlags = CombatLogGetCurrentEventInfo();
