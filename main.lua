@@ -1,5 +1,6 @@
 local name, addonTable = ...
 LootTracker = addonTable
+LootTracker.Version = GetAddOnMetadata(name, "Version");
 local LootTrackerDB = { }
 
 -- window frame. Eventually, this should be moved to its own file
@@ -9,14 +10,13 @@ local FRAME_HEIGHT = 500
 local HEADER_HEIGHT = 24
 local HEADER_LEFT = 3
 local HEADER_TOP = -50
-local ROW_HEIGHT = 15
+local ROW_HEIGHT = 16
 local ROW_TEXT_PADDING = 5
-local ROWS_HEIGHT = 450
 local NAME_WIDTH = 300
 local KILL_WIDTH = 100
 local LOOTABLE_WIDTH = 100
-local SCROLL_WIDTH = 27 -- Scrollbar width
-local STATUS_TEXT = "Total number of creatures: %d"
+local SCROLL_WIDTH = 29
+local TITLE_HEADER_TEXT = "LootTracker v%s"
 
 local CreateHeader = function(parent)
 	local h = CreateFrame("Button", nil, parent)
@@ -51,7 +51,6 @@ local CreateHeader = function(parent)
 
 	return h
 end
-
 local CreateRow = function(container, previous)
 	local row = CreateFrame("Button", nil, container)
 	row:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
@@ -108,7 +107,7 @@ local CreateWindow = function()
 	window.titleLabel:SetWidth(250)
 	window.titleLabel:SetHeight(16)
 	window.titleLabel:SetPoint("TOP", window, "TOP", 0, -5)
-	window.titleLabel:SetText("LootTracker")
+	window.titleLabel:SetText(TITLE_HEADER_TEXT:format(LootTracker.Version))
 
 	window:SetScript("OnMouseDown", function(s) s:StartMoving() end)
 	window:SetScript("OnMouseUp", function(s) s:StopMovingOrSizing() end)
@@ -139,68 +138,69 @@ local CreateWindow = function()
 	window.numberLootableHeader:SetWidth(LOOTABLE_WIDTH + HEADER_LEFT)
 	window.numberLootableHeader:SetText("# Lootable")
 
-	window.rows = CreateFrame("FRAME", nil, window)
-	window.rows:SetPoint("LEFT")
-	window.rows:SetPoint("RIGHT", window, "RIGHT", -SCROLL_WIDTH, 0)
-	window.rows:SetPoint("TOP", window.nameHeader, "BOTTOM", 0, 0)
-	window.rows:SetPoint("BOTTOM", window, "BOTTOM", 0, 0)
-	window.rows:SetPoint("TOPLEFT", window.nameHeader, "BOTTOMLEFT", 0, 30)
-
-	local lastKnownRow, rowCount = window.nameHeader, 0
-	for k,v in pairs(LootTrackerDB.Data) do
-		window.rows[k] = CreateRow(window.rows, lastKnownRow)
-		window.rows[k].name:SetText(v.name .. ' (' .. k .. ')')
-		window.rows[k].totalKill:SetText(v.total)
-		window.rows[k].numberLootable:SetText(v.lootable)
-		lastKnownRow = window.rows[k]
-		rowCount = rowCount + 1
-	end
-	
-	window.rows.scroller = CreateFrame("ScrollFrame", "LootTrackerScrollFrame", window.rows, "FauxScrollFrameTemplateLight")
-	window.rows.scroller:SetWidth(window.rows:GetWidth())
-	window.rows.scroller:SetPoint("TOPRIGHT", window.rows, "TOPRIGHT", -2, -9)
-	window.rows.scroller:SetPoint("BOTTOMRIGHT", 0, 4)
-	window.rows.scroller:SetScript("OnVerticalScroll",
-		function(s, val)
-			FauxScrollFrame_OnVerticalScroll(
-				s, val, ROW_HEIGHT,
-				function()
-					local offset = FauxScrollFrame_GetOffset(LootTrackerScrollFrame)
-					-- TODO: have this actually scroll the window by modifying what data is visible
-				end
-			)
-		end
-	)
-	window.statusLabel = window:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	window.statusLabel:SetWidth(420)
-	window.statusLabel:SetHeight(16)
-	window.statusLabel:SetPoint("BOTTOM", window, "BOTTOM", 0, 8)
-	window.statusLabel:SetText(STATUS_TEXT:format(rowCount))
-	
-	window.insertNewCreatureData = function(creatureID, creatureData)
-		if creatureID and creatureData then
-			window.rows[creatureID] = CreateRow(window.rows, lastKnownRow)
-			window.rows[creatureID].name:SetText(creatureData.name .. ' (' .. creatureID .. ')')
-			window.rows[creatureID].totalKill:SetText(creatureData.total)
-			window.rows[creatureID].numberLootable:SetText(creatureData.lootable)
-			lastKnownRow = window.rows[creatureID]
-			
-			rowCount = rowCount + 1
-			window.statusLabel:SetText(STATUS_TEXT:format(rowCount))
-		end
-	end
-	window.updateWindowData = function(creatureID)
-		local creatureData = LootTrackerDB.Data[creatureID]
-		if creatureData then
-			if window.rows[creatureID] then
-				window.rows[creatureID].totalKill:SetText(creatureData.total)
-				window.rows[creatureID].numberLootable:SetText(creatureData.lootable)
-			else
-				window.insertNewCreatureData(creatureID, creatureData)
+	local rowCount, maxRows = 0
+	local function updateScrollFrame()
+		local data = LootTrackerDB.Data or {}
+		rowCount = 0
+		for k,v in pairs(data) do rowCount = rowCount + 1 end
+		FauxScrollFrame_Update(window.scrollFrame, rowCount, maxRows, ROW_HEIGHT)
+		local offset = FauxScrollFrame_GetOffset(LootTrackerScrollFrame)
+		local rowCounter, mobIndex = 1, 1
+		for k,v in pairs(data) do
+			-- if we've exceeded the maximum number of rows in the window, then we can stop the loop
+			if rowCounter > maxRows then break end
+			-- if the current mob we're looking at sits at an index above the scrollFrame offset, we want to render it
+			if mobIndex >= offset then
+				window.scrollFrame.rows[rowCounter].name:SetText(v.name .. ' (' .. k .. ')')
+				window.scrollFrame.rows[rowCounter].totalKill:SetText(v.total)
+				window.scrollFrame.rows[rowCounter].numberLootable:SetText(v.lootable)
+				rowCounter = rowCounter + 1
 			end
+			-- always increase the mobIndex counter
+			mobIndex = mobIndex + 1
+		end
+		
+		if offset == 0 then
+			LootTrackerScrollFrameScrollBarScrollUpButton:Disable()
+		else
+			LootTrackerScrollFrameScrollBarScrollUpButton:Enable()
+		end
+		
+		if offset + maxRows >= rowCount then
+			LootTrackerScrollFrameScrollBarScrollDownButton:Disable()
+		else
+			LootTrackerScrollFrameScrollBarScrollDownButton:Enable()
 		end
 	end
+	
+	window.scrollFrame = CreateFrame("ScrollFrame", "LootTrackerScrollFrame", window, "FauxScrollFrameTemplateLight")
+	window.scrollFrame:SetWidth(window:GetWidth())
+	window.scrollFrame:SetPoint("TOPLEFT", window.nameHeader, "TOPRIGHT", -8, -3)
+	window.scrollFrame:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", -SCROLL_WIDTH, 4)
+	window.scrollFrame:SetScript("OnVerticalScroll", function(s, val) FauxScrollFrame_OnVerticalScroll(s, val, ROW_HEIGHT, updateScrollFrame) end)
+	window.scrollFrame:SetScript("OnShow", function() updateScrollFrame() end)
+	window.scrollFrame.rows = { }
+
+	local function updateMaxRows()
+		maxRows = math.floor(window.scrollFrame:GetHeight() / ROW_HEIGHT)-1
+		if maxRows < 0 then maxRows = 1 end
+	end
+	updateMaxRows()
+	
+	-- initialize the scrollFrame with rows. Initially they should be blank
+	-- TODO: do we really need this? If the need for a new row can be calculated on demand in window.Update, this initial seeding may not be needed
+	local lastKnownRow = window.nameHeader
+	for i=1, maxRows do
+		window.scrollFrame.rows[i] = CreateRow(window.scrollFrame, lastKnownRow)
+		window.scrollFrame.rows[i].name:SetText("")
+		window.scrollFrame.rows[i].totalKill:SetText("")
+		window.scrollFrame.rows[i].numberLootable:SetText("")
+		lastKnownRow = window.scrollFrame.rows[i]
+	end
+
+	window.Update = updateScrollFrame
 end
+
 
 -- general functions
 local saveCreatureData = function(creatureID, name, hasLoot)
@@ -208,8 +208,8 @@ local saveCreatureData = function(creatureID, name, hasLoot)
 	creature.total = (creature.total or 0) + 1
 	creature.lootable = (creature.lootable or 0) + (hasLoot and 1 or 0)
 	rawset(LootTrackerDB.Data, creatureID, creature)
-	 -- TODO:: this is almost certainly a major performance hit. Maybe better to only update window when combat ends?
-	window.updateWindowData(creatureID)
+	-- TODO:: this is almost certainly a performance hit. Maybe better to only update window when combat ends instead of on each kill?
+	window.Update()
 end
 local getCreatureIDForGUID = function(unitGUID)
 	local tbl = { strsplit("-",unitGUID) }
@@ -254,11 +254,11 @@ eventFrame.events.COMBAT_LOG_EVENT_UNFILTERED = function()
 end
 eventFrame:RegisterEvent("VARIABLES_LOADED")
 eventFrame.events.VARIABLES_LOADED = function()
-	-- TODO: cache some info here like character GUID, capture sessions, etc
 	LootTrackerDB = _G["LootTrackerDB"] or {}
 	if not _G["LootTrackerDB"] then _G["LootTrackerDB"] = LootTrackerDB end
 	if not LootTrackerDB.Data then LootTrackerDB.Data = { } end
 		
 	CreateWindow()
+	window.Update()
 	window:Show()
 end
