@@ -138,35 +138,38 @@ local CreateWindow = function()
 	window.numberLootableHeader:SetWidth(LOOTABLE_WIDTH + HEADER_LEFT)
 	window.numberLootableHeader:SetText("# Lootable")
 
-	local rowCount, maxRows = 0
+	local maxRows = 0
 	local function updateScrollFrame()
 		local data = LootTrackerDB.Data or {}
-		rowCount = 0
+		local rowCount = 0
 		for k,v in pairs(data) do rowCount = rowCount + 1 end
-		FauxScrollFrame_Update(window.scrollFrame, rowCount, maxRows, ROW_HEIGHT)
-		local offset = FauxScrollFrame_GetOffset(LootTrackerScrollFrame)
+		FauxScrollFrame_Update(window.scrollFrame, rowCount, maxRows, ROW_HEIGHT, nil, nil, nil, nil, nil, nil, true)
+		local offset = FauxScrollFrame_GetOffset(LootTrackerScrollFrame) or 0
+		-- since we're using a non-sequential table index, we need separate counters to track the offset manually
+		-- rowCounter tracks the row being updated in the frame, while mobIndex tracks the creature entry in LootTrackerDB.Data
 		local rowCounter, mobIndex = 1, 1
 		for k,v in pairs(data) do
-			-- if we've exceeded the maximum number of rows in the window, then we can stop the loop
-			if rowCounter > maxRows then break end
 			-- if the current mob we're looking at sits at an index above the scrollFrame offset, we want to render it
 			if mobIndex >= offset then
 				window.scrollFrame.rows[rowCounter].name:SetText(v.name .. ' (' .. k .. ')')
 				window.scrollFrame.rows[rowCounter].totalKill:SetText(v.total)
 				window.scrollFrame.rows[rowCounter].numberLootable:SetText(v.lootable)
+				window.scrollFrame.rows[rowCounter]:Enable()
 				rowCounter = rowCounter + 1
 			end
+			-- if we've exceeded the maximum number of rows in the window, then we can stop the loop
+			if rowCounter > maxRows then break end
 			-- always increase the mobIndex counter
 			mobIndex = mobIndex + 1
 		end
 		
-		if offset == 0 then
+		if offset <= 0 then
 			LootTrackerScrollFrameScrollBarScrollUpButton:Disable()
 		else
 			LootTrackerScrollFrameScrollBarScrollUpButton:Enable()
 		end
 		
-		if offset + maxRows >= rowCount then
+		if rowCount < maxRows or offset + maxRows >= rowCount then
 			LootTrackerScrollFrameScrollBarScrollDownButton:Disable()
 		else
 			LootTrackerScrollFrameScrollBarScrollDownButton:Enable()
@@ -195,6 +198,7 @@ local CreateWindow = function()
 		window.scrollFrame.rows[i].name:SetText("")
 		window.scrollFrame.rows[i].totalKill:SetText("")
 		window.scrollFrame.rows[i].numberLootable:SetText("")
+		window.scrollFrame.rows[i]:Disable()
 		lastKnownRow = window.scrollFrame.rows[i]
 	end
 
