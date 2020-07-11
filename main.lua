@@ -196,7 +196,7 @@ local CreateWindow = function()
 	
 	window.scrollFrame = CreateFrame("ScrollFrame", "LootTrackerScrollFrame", window, "FauxScrollFrameTemplateLight")
 	window.scrollFrame:SetWidth(window:GetWidth())
-	window.scrollFrame:SetPoint("TOPLEFT", window.nameHeader, "TOPRIGHT", -8, -3)
+	window.scrollFrame:SetPoint("TOPLEFT", window.nameHeader, "TOPLEFT", 0, -3)
 	window.scrollFrame:SetPoint("BOTTOMRIGHT", window, "BOTTOMRIGHT", -SCROLL_WIDTH, 4)
 	window.scrollFrame:SetScript("OnVerticalScroll", function(s, val) FauxScrollFrame_OnVerticalScroll(s, val, ROW_HEIGHT, updateScrollFrame) end)
 	window.scrollFrame:SetScript("OnShow", function() updateScrollFrame() end)
