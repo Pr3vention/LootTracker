@@ -121,7 +121,7 @@ local CreateWindow = function()
 	window.helpLabel:SetPoint("TOP", window, "TOP", 0, -28)
 	window.helpLabel:SetWordWrap(true)
 	window.helpLabel:SetMaxLines(2)
-	window.helpLabel:SetText("Click an entry to see its loot table.")
+	window.helpLabel:SetText("Left click to see a loot table. Right click to remove the creature.")
 
 	window.nameHeader = CreateHeader(window)
 	window.nameHeader:SetPoint("TOPLEFT", window, "TOPLEFT", HEADER_LEFT, HEADER_TOP)
@@ -131,12 +131,12 @@ local CreateWindow = function()
 	window.totalKillHeader = CreateHeader(window)
 	window.totalKillHeader:SetPoint("TOPLEFT", window.nameHeader, "TOPRIGHT", -2, 0)
 	window.totalKillHeader:SetWidth(KILL_WIDTH)
-	window.totalKillHeader:SetText("Total Kills")
+	window.totalKillHeader:SetText("Kills")
 
 	window.numberLootableHeader = CreateHeader(window)
 	window.numberLootableHeader:SetPoint("TOPLEFT", window.totalKillHeader, "TOPRIGHT", -2, 0)
 	window.numberLootableHeader:SetWidth(LOOTABLE_WIDTH + HEADER_LEFT)
-	window.numberLootableHeader:SetText("# Lootable")
+	window.numberLootableHeader:SetText("Lootable")
 
 	local maxRows = 0
 	local function updateScrollFrame(clearAll)
