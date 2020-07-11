@@ -13,8 +13,8 @@ local HEADER_TOP = -50
 local ROW_HEIGHT = 16
 local ROW_TEXT_PADDING = 5
 local NAME_WIDTH = 300
-local KILL_WIDTH = 100
-local LOOTABLE_WIDTH = 100
+local KILL_WIDTH = 60
+local LOOTABLE_WIDTH = 60
 local SCROLL_WIDTH = 29
 local TITLE_HEADER_TEXT = "LootTracker v%s"
 
@@ -76,6 +76,14 @@ local CreateRow = function(container, previous)
 	row.numberLootable:SetWidth(LOOTABLE_WIDTH - ROW_TEXT_PADDING * 2)
 	row.numberLootable:SetPoint("LEFT", row.totalKill, "RIGHT", 2 * ROW_TEXT_PADDING, 0)
 	row.numberLootable:SetJustifyH("RIGHT")
+	
+	row:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+	row:SetScript("OnClick", function(self, button, heldDown)
+		if button == 'RightButton' then
+			rawset(LootTrackerDB.Data, self.creatureID, nil)
+			window.Update()
+		end
+	end)
 	return row
 end
 local CreateWindow = function()
@@ -137,28 +145,20 @@ local CreateWindow = function()
 	window.numberLootableHeader:SetPoint("TOPLEFT", window.totalKillHeader, "TOPRIGHT", -2, 0)
 	window.numberLootableHeader:SetWidth(LOOTABLE_WIDTH + HEADER_LEFT)
 	window.numberLootableHeader:SetText("Lootable")
-
-	local maxRows = 0
-	local function updateScrollFrame(clearAll)
+	
+	local updateScrollFrame = function()
 		local data = LootTrackerDB.Data or {}
-		local rowCount = 0
+		local rowCount, maxRows = 0, window.maxRows()
 		for k,v in pairs(data) do rowCount = rowCount + 1 end
 		FauxScrollFrame_Update(window.scrollFrame, rowCount, maxRows, ROW_HEIGHT, nil, nil, nil, nil, nil, nil, true)
 		local offset = FauxScrollFrame_GetOffset(LootTrackerScrollFrame) or 0
 		-- since we're using a non-sequential table index, we need separate counters to track the offset manually
 		-- rowCounter tracks the row being updated in the frame, while mobIndex tracks the creature entry in LootTrackerDB.Data
-		if clearAll then
-			for i=1, maxRows do
-				window.scrollFrame.rows[i].name:SetText("")
-				window.scrollFrame.rows[i].totalKill:SetText("")
-				window.scrollFrame.rows[i].numberLootable:SetText("")
-				window.scrollFrame.rows[i]:Disable()
-			end
-		end
 		local rowCounter, mobIndex = 1, 1
 		for k,v in pairs(data) do
 			-- if the current mob we're looking at sits at an index above the scrollFrame offset, we want to render it
 			if mobIndex >= offset then
+				window.scrollFrame.rows[rowCounter].creatureID = k
 				window.scrollFrame.rows[rowCounter].name:SetText(v.name .. ' (' .. k .. ')')
 				window.scrollFrame.rows[rowCounter].totalKill:SetText(v.total)
 				window.scrollFrame.rows[rowCounter].numberLootable:SetText(v.lootable)
@@ -169,6 +169,15 @@ local CreateWindow = function()
 			if rowCounter > maxRows then break end
 			-- always increase the mobIndex counter
 			mobIndex = mobIndex + 1
+		end
+		-- if the rowcounter is less than the maximum number of rows, clear out the data
+		while rowCounter < maxRows do
+			window.scrollFrame.rows[rowCounter].creatureID = 0
+			window.scrollFrame.rows[rowCounter].name:SetText("")
+			window.scrollFrame.rows[rowCounter].totalKill:SetText("")
+			window.scrollFrame.rows[rowCounter].numberLootable:SetText("")
+			window.scrollFrame.rows[rowCounter]:Disable()
+			rowCounter = rowCounter + 1
 		end
 		
 		if offset <= 0 then
@@ -183,7 +192,7 @@ local CreateWindow = function()
 			LootTrackerScrollFrameScrollBarScrollDownButton:Enable()
 		end
 	end
-	
+
 	window.purgeButton = CreateFrame("Button", nil, window, "UIPanelButtonTemplate")
 	window.purgeButton:SetHeight(24)
 	window.purgeButton:SetWidth(150)
@@ -191,7 +200,7 @@ local CreateWindow = function()
 	window.purgeButton:SetText("Purge data (temp)")
 	window.purgeButton:SetScript("OnClick", function()
 		table.wipe(LootTrackerDB.Data)
-		updateScrollFrame(true)
+		updateScrollFrame()
 	end)
 	
 	window.scrollFrame = CreateFrame("ScrollFrame", "LootTrackerScrollFrame", window, "FauxScrollFrameTemplateLight")
@@ -202,24 +211,25 @@ local CreateWindow = function()
 	window.scrollFrame:SetScript("OnShow", function() updateScrollFrame() end)
 	window.scrollFrame.rows = { }
 
-	local function updateMaxRows()
-		maxRows = math.floor(window.scrollFrame:GetHeight() / ROW_HEIGHT)-1
+	window.maxRows = function()
+		local maxRows = math.floor(window.scrollFrame:GetHeight() / ROW_HEIGHT)-1
 		if maxRows < 0 then maxRows = 1 end
+		return maxRows
 	end
-	updateMaxRows()
 	
 	-- initialize the scrollFrame with rows. Initially they should be blank
 	-- TODO: do we really need this? If the need for a new row can be calculated on demand in window.Update, this initial seeding may not be needed
 	local lastKnownRow = window.nameHeader
-	for i=1, maxRows do
+	for i=1, window.maxRows() do
 		window.scrollFrame.rows[i] = CreateRow(window.scrollFrame, lastKnownRow)
+		window.scrollFrame.rows[i].creatureID = 0
 		window.scrollFrame.rows[i].name:SetText("")
 		window.scrollFrame.rows[i].totalKill:SetText("")
 		window.scrollFrame.rows[i].numberLootable:SetText("")
 		window.scrollFrame.rows[i]:Disable()
 		lastKnownRow = window.scrollFrame.rows[i]
 	end
-
+	
 	window.Update = updateScrollFrame
 end
 
