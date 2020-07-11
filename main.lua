@@ -171,7 +171,7 @@ local CreateWindow = function()
 			mobIndex = mobIndex + 1
 		end
 		-- if the rowcounter is less than the maximum number of rows, clear out the data
-		while rowCounter < maxRows do
+		while rowCounter <= maxRows do
 			window.scrollFrame.rows[rowCounter].creatureID = 0
 			window.scrollFrame.rows[rowCounter].name:SetText("")
 			window.scrollFrame.rows[rowCounter].totalKill:SetText("")
