@@ -1,5 +1,5 @@
 ## Author: Pr3vention
-## Interface: 80300
+## Interface: 90005
 ## Title: LootTracker
 ## Notes: Tracks mob kill quantity and relative item drop rate
 ## Version: 0.0.1
