@@ -235,7 +235,7 @@ end
 
 
 -- general functions
-local saveCreatureData = function(creatureID, name, hasLoot)
+local SaveCreatureData = function(creatureID, name, hasLoot)
 	local creature = rawget(LootTrackerDB.Data, creatureID) or {name=name}
 	creature.total = (creature.total or 0) + 1
 	creature.lootable = (creature.lootable or 0) + (hasLoot and 1 or 0)
@@ -243,20 +243,17 @@ local saveCreatureData = function(creatureID, name, hasLoot)
 	-- TODO:: this is almost certainly a performance hit. Maybe better to only update window when combat ends instead of on each kill?
 	window.Update()
 end
--- TODO: rework this function so it will return a type and ID that can be inspected as needed
-local getCreatureIDForGUID = function(unitGUID)
-	local tbl = { strsplit("-",unitGUID) }
-	-- TODO: how to handle Vignette mobs (always 0 ID)? C_VignetteInfo exists, but it doesn't seem to expose anything useful
-	if tbl[1] == "Creature" then
-		return tbl[6]
-	end
-end
-local captureLootInfo = function(unitGUID, name, flags)
-	local creatureID = getCreatureIDForGUID(unitGUID)
+local CaptureLootInfo = function(unitGUID, name, flags)
+	local creatureID = GetCreatureIDFromGUID(unitGUID)
 	if creatureID then
 		local hasLoot, inRange = CanLootUnit(unitGUID)
-		saveCreatureData(creatureID, name, hasLoot)
+		SaveCreatureData(creatureID, name, hasLoot)
 	end
+end
+local GetCreatureIDFromGUID = function(unitGUID)
+	local tbl = { strsplit("-",unitGUID) }
+	if tbl[1] == "Creature" then
+		return tbl[6]
 end
 local GetItemInfoFromLink = function(itemLink)
 	if not itemLink then return end
@@ -290,7 +287,7 @@ eventFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
 eventFrame.events.COMBAT_LOG_EVENT_UNFILTERED = function()
 	local _, event, _, sourceGUID, sourceName, _, _, destGUID, destName, destFlags = CombatLogGetCurrentEventInfo();
 	if event == "PARTY_KILL" then
-		C_Timer.After(1, function() captureLootInfo(destGUID, destName, destFlags) end)
+		C_Timer.After(1, function() CaptureLootInfo(destGUID, destName, destFlags) end)
 	end
 end
 eventFrame:RegisterEvent("VARIABLES_LOADED")
@@ -311,7 +308,7 @@ eventFrame.events.LOOT_OPENED = function(autoloot, isFromItem)
 		local LinkType, ID, Name, CleanLink = GetItemInfoFromLink(itemLink)
 		local lootSourceInfo = {GetLootSourceInfo(slot)}
 		for i=1,#lootSourceInfo,2 do
-			local sourceID = getCreatureIDForGUID(lootSourceInfo[i])
+			local sourceID = GetCreatureIDFromGUID(lootSourceInfo[i])
 			if(LootTrackerDB.Data[sourceID]) then
 				if not LootTrackerDB.Data[sourceID].loot then
 					LootTrackerDB.Data[sourceID].loot = {}
