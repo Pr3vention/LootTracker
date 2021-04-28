@@ -88,7 +88,7 @@ local CreateRow = function(container, previous)
 end
 local CreateWindow = function()
 	if window then return end
-	window = CreateFrame("FRAME", 'LootTrackerWindow', UIParent)
+	window = CreateFrame("FRAME", 'LootTrackerWindow', UIParent, BackdropTemplateMixin and "BackdropTemplate")
 	window:SetToplevel(true)
 	window:EnableMouse(true)
 	window:SetMovable(true)
