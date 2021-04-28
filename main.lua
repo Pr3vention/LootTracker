@@ -254,6 +254,7 @@ local GetCreatureIDFromGUID = function(unitGUID)
 	local tbl = { strsplit("-",unitGUID) }
 	if tbl[1] == "Creature" then
 		return tbl[6]
+	end
 end
 local GetItemInfoFromLink = function(itemLink)
 	if not itemLink then return end
