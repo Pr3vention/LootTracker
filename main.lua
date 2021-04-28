@@ -243,6 +243,7 @@ local saveCreatureData = function(creatureID, name, hasLoot)
 	-- TODO:: this is almost certainly a performance hit. Maybe better to only update window when combat ends instead of on each kill?
 	window.Update()
 end
+-- TODO: rework this function so it will return a type and ID that can be inspected as needed
 local getCreatureIDForGUID = function(unitGUID)
 	local tbl = { strsplit("-",unitGUID) }
 	-- TODO: how to handle Vignette mobs (always 0 ID)? C_VignetteInfo exists, but it doesn't seem to expose anything useful
@@ -256,6 +257,13 @@ local captureLootInfo = function(unitGUID, name, flags)
 		local hasLoot, inRange = CanLootUnit(unitGUID)
 		saveCreatureData(creatureID, name, hasLoot)
 	end
+end
+local GetItemInfoFromLink = function(itemLink)
+	if not itemLink then return end
+	local _, _, Color, LinkType, ID = string.find(itemLink,"|?c?f?f?(%x*)|?H?([^:]*):?(%d+)")
+	local Name = C_Item.GetItemNameByID(itemLink)
+	local CleanLink = '|cff' .. Color .. '|H' .. LinkType .. ':' .. ID .. ':::::::::|h[' .. Name .. ']|h|r'
+	return LinkType, ID, Name, CleanLink
 end
 
 ----------------
@@ -294,4 +302,24 @@ eventFrame.events.VARIABLES_LOADED = function()
 	CreateWindow()
 	window.Update()
 	window:Show()
+end
+eventFrame:RegisterEvent("LOOT_OPENED")
+eventFrame.events.LOOT_OPENED = function(autoloot, isFromItem)
+	local numItemsLooted = GetNumLootItems()
+	for slot=1,numItemsLooted do
+		local itemLink = GetLootSlotLink(slot)
+		local LinkType, ID, Name, CleanLink = GetItemInfoFromLink(itemLink)
+		local lootSourceInfo = {GetLootSourceInfo(slot)}
+		for i=1,#lootSourceInfo,2 do
+			local sourceID = getCreatureIDForGUID(lootSourceInfo[i])
+			if(LootTrackerDB.Data[sourceID]) then
+				if not LootTrackerDB.Data[sourceID].loot then
+					LootTrackerDB.Data[sourceID].loot = {}
+				end
+				LootTrackerDB.Data[sourceID].loot[ID] = (LootTrackerDB.Data[sourceID].loot[ID] or 0) + lootSourceInfo[i+1]
+			end
+		end
+	end
+	-- TODO: add support for loot from fishing?
+	-- TODO: add support for item-granted loot windows (bags)?
 end
