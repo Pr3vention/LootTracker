@@ -28,7 +28,7 @@ local GetItemInfoFromLink = function(itemLink)
 		return LinkType, ID, "UNKNOWN"
 	end
 	
-	local CleanLink = '|cff' .. Color .. '|H' .. LinkType .. ':' .. ID .. ':::::::::|h[' .. Name .. ']|h|r'
+	local CleanLink = '|cff' .. Color .. '|H' .. LinkType .. ':' .. ID .. ':::::::::|h[' .. (Name or 'UNKNOWN') .. ']|h|r'
 	return LinkType, ID, Name, CleanLink
 end
 
