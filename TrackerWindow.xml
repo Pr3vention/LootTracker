@@ -1,0 +1,146 @@
+<Ui>
+	<Script file="TrackerWindow.lua"/>
+	
+	<Button name="LootTrackerHeaderTemplate" virtual="true">
+		<Size x="1" y="16"/>
+		<Layers>
+			<Layer level="BACKGROUND">
+				<Texture parentKey="Left" name="$parentLeft" file="Interface\FriendsFrame\WhoFrame-ColumnTabs">
+					<Size x="5" y="16"/>
+					<Anchors>
+						<Anchor point="TOPLEFT"/>
+					</Anchors>
+					<TexCoords left="0" right="0.078125" top="0" bottom="0.75"/>
+				</Texture>
+				<Texture parentKey="Middle" name="$parentMiddle" file="Interface\FriendsFrame\WhoFrame-ColumnTabs">
+					<Size x="40" y="16"/>
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Left" relativePoint="RIGHT"/>
+					</Anchors>
+					<TexCoords left="0.078125" right="0.90625" top="0" bottom="0.75"/>
+				</Texture>
+				<Texture parentKey="Right" name="$parentRight" file="Interface\FriendsFrame\WhoFrame-ColumnTabs">
+					<Size x="4" y="16"/>
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Middle" relativePoint="RIGHT"/>
+					</Anchors>
+					<TexCoords left="0.90625" right="0.96875" top="0" bottom="0.75"/>
+				</Texture>
+			</Layer>
+		</Layers>
+		<ButtonText>
+			<Anchors>
+				<Anchor point="LEFT" x="8" y="0"/>
+			</Anchors>
+		</ButtonText>
+		<NormalFont style="GameFontHighlightSmall"/>
+		<HighlightTexture parentKey="HighlightTexture" name="$parentHighlightTexture" file="Interface\PaperDollInfoFrame\UI-Character-Tab-Highlight" alphaMode="ADD">
+			<Anchors>
+				<Anchor point="TOPLEFT" relativeKey="$parent.Left" x="-2" y="5"/>
+				<Anchor point="BOTTOMRIGHT" relativeKey="$parent.Right" x="2" y="-7"/>
+			</Anchors>
+		</HighlightTexture>
+	</Button>
+	<Button name="LootTrackerRowTemplate" virtual="true">
+		<Size x="264" y="16"/>
+		<Layers>
+			<Layer level="BORDER">
+				<FontString parentKey="Name" inherits="GameFontNormalSmall" justifyH="LEFT">
+					<Size x="140" y="16"/>
+					<Anchors>
+						<Anchor point="TOPLEFT" x="4" y="0"/>
+					</Anchors>
+				</FontString>
+				<FontString parentKey="Killed" inherits="GameFontHighlightSmall" justifyH="CENTER" wordwrap="false">
+					<Size x="60" y="16"/>
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Name" relativePoint="RIGHT" x="0" y="0"/>
+					</Anchors>
+				</FontString>
+				<FontString parentKey="Lootable" inherits="GameFontHighlightSmall" justifyH="CENTER">
+					<Size x="58" y="16"/>
+					<Anchors>
+						<Anchor point="LEFT" relativeKey="$parent.Killed" relativePoint="RIGHT" x="0" y="0"/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<HighlightTexture parentKey="HighlightTexture" file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD" />
+	</Button>
+	
+	<Frame name="LootTrackerWindow" enableMouse="true" resizable="true" movable="true" topLevel="true" parent="UIParent" inherits="UIPanelDialogTemplate">
+		<Size x="300" y="200" />
+		<Anchors>
+			<Anchor point="CENTER"/>
+		</Anchors>
+		<Scripts>
+			<OnLoad>
+				self.ScrollFrame.ScrollBar:SetPoint("TOPLEFT", self.ScrollFrame, "TOPRIGHT", 5,-2)
+				OnLoad(self)
+			</OnLoad>
+			<OnMouseDown>
+				if self:IsMovable() then
+					self:StartMoving()
+				end
+			</OnMouseDown>
+			<OnMouseUp>
+				self:StopMovingOrSizing()
+			</OnMouseUp>
+		</Scripts>
+		<Frames>
+			<Button name="$parentColumnHeader1" inherits="LootTrackerHeaderTemplate" text="Source">
+				<Anchors>
+					<Anchor point="TOPLEFT" x="7" y="-25"/>
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						Column_SetWidth(self, 150);
+					</OnLoad>
+				</Scripts>
+			</Button>
+			<Button name="$parentColumnHeader2" inherits="LootTrackerHeaderTemplate" text="Killed">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentColumnHeader1" relativePoint="RIGHT" x="-2" />
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						Column_SetWidth(self, 60);
+					</OnLoad>
+				</Scripts>
+			</Button>
+			<Button name="$parentColumnHeader3" inherits="LootTrackerHeaderTemplate" text="Lootable">
+				<Anchors>
+					<Anchor point="LEFT" relativeTo="$parentColumnHeader2" relativePoint="RIGHT" x="-2" />
+				</Anchors>
+				<Scripts>
+					<OnLoad>
+						Column_SetWidth(self, 60);
+					</OnLoad>
+				</Scripts>
+			</Button>
+			<ScrollFrame name="$parentScrollFrame" parentKey="ScrollFrame" inherits="FauxScrollFrameTemplate">
+				<Anchors>
+					<Anchor point="TOPLEFT" relativeTo="$parentColumnHeader1" relativePoint="BOTTOMLEFT">
+						<Offset x="2" y="0" />
+					</Anchor>
+					<Anchor point="BOTTOMRIGHT">
+						<Offset x="-28" y="8" />
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnVerticalScroll>
+						FauxScrollFrame_OnVerticalScroll(self, offset, LootTracker.Constants.ROW_HEIGHT, LootTracker.Window.Update);
+					</OnVerticalScroll>
+				</Scripts>
+				<ScrollChild>
+					<Frame name="$parentScrollChildFrame" parentKey="ScrollChildFrame">
+						<Anchors>
+							<Anchor point="TOPLEFT" />
+							<Anchor point="BOTTOMRIGHT" />
+						</Anchors>
+					</Frame>
+				</ScrollChild>
+			</ScrollFrame>
+		</Frames>
+	</Frame>
+</Ui>
