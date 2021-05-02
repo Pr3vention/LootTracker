@@ -35,11 +35,11 @@ local SaveCreatureData = function(creatureID, name, hasLoot)
 	
 	rawset(LootTrackerDB.Data, creatureID, creature)
 	-- TODO:: this is almost certainly a performance hit. Maybe better to only update window when combat ends instead of on each kill?
-	Window:Update()
+	LootTracker.Window:Update()
 end
 local CaptureLootInfo = function(unitGUID, name, flags)
 	local creatureID = GetCreatureIDFromGUID(unitGUID)
-	print(unitGUID, name, creatureID)
+	--print(unitGUID, name, creatureID)
 	if creatureID then
 		local hasLoot, inRange = CanLootUnit(unitGUID)
 		SaveCreatureData(creatureID, name, hasLoot)
