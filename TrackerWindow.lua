@@ -41,7 +41,7 @@ function Window:Update()
 		end
 	end
 	
-	FauxScrollFrame_Update(sf, count, sf.maxRows, ROW_HEIGHT);
+	FauxScrollFrame_Update(sf, count, sf.maxRows, ROW_HEIGHT, nil, nil, nil, nil, nil, nil, true);
 end
 
 function OnLoad(frame)
