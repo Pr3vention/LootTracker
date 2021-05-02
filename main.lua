@@ -19,7 +19,15 @@ end
 local GetItemInfoFromLink = function(itemLink)
 	if not itemLink then return end
 	local _, _, Color, LinkType, ID = string.find(itemLink,"|?c?f?f?(%x*)|?H?([^:]*):?(%d+)")
-	local Name = C_Item.GetItemNameByID(itemLink)
+	local Name
+	if LinkType == "item" then
+		Name = C_Item.GetItemNameByID(ID)
+	elseif LinkType == "currency" then
+		Name = C_CurrencyInfo.GetCurrencyInfo(ID)
+	else
+		return LinkType, ID, "UNKNOWN"
+	end
+	
 	local CleanLink = '|cff' .. Color .. '|H' .. LinkType .. ':' .. ID .. ':::::::::|h[' .. Name .. ']|h|r'
 	return LinkType, ID, Name, CleanLink
 end
