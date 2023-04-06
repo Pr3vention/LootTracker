@@ -23,7 +23,7 @@ function Window:Update()
 	local sf = LootTrackerWindow.ScrollFrame
 	local offset = FauxScrollFrame_GetOffset(sf)
 	local numRows = #sf.rows
-	local count, index = 0, 1
+	local count, index = 1, 1
 	for creatureID,info in pairs(data) do
 		if count >= offset and index <= sf.maxRows then
 			sf.rows[index].Name:SetText(info.name)
@@ -37,7 +37,9 @@ function Window:Update()
 
 	if count < sf.maxRows then
 		for i=count, sf.maxRows do
-			sf.rows[i]:Hide()
+			if sf.rows[i] then
+				sf.rows[i]:Hide()
+			end
 		end
 	end
 	
