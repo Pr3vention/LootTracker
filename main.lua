@@ -1,6 +1,6 @@
 local name, addonTable = ...
 LootTracker = addonTable
-LootTracker.Version = GetAddOnMetadata(name, "Version");
+LootTracker.Version = C_AddOns.GetAddOnMetadata(name, "Version");
 
 LootTracker.Constants = {
 	ROW_HEIGHT = 16,
